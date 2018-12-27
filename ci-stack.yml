@@ -1,0 +1,68 @@
+version: '3.3'
+
+services:
+  db:
+    image: mysql
+    secrets:
+      - db_root_password
+      - db_dba_password
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      resources:
+        reservations:
+          memory: 128M
+        limits:
+          memory: 256M
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_USER: dba
+      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_dba_password
+    networks:
+      - appnet
+  viz:
+    image: dockersamples/visualizer
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - "8090:8080"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - appnet
+  teamcity:
+    image: jetbrains/teamcity-server
+    volumes:
+      - ./data/server/datadir:/data/teamcity_server/datadir
+      - ./data/server/logs:/opt/teamcity/logs
+    ports:
+      - 8111:8111
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - appnet
+  teamcity-agent:
+    image: jetbrains/teamcity-agent
+    volumes:
+      - ./data/agent:/data/teamcity_agent/conf
+    environment:
+      SERVER_URL: http://teamcity:8111
+    deploy:
+      replicas: 3
+    networks:
+	  - appnet
+secrets:
+  db_root_password:
+    external: true
+  db_dba_password:
+    external: true
+
+networks:
+  appnet:
+    external: true
