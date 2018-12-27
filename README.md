@@ -1,5 +1,7 @@
 # Teamcity setup with docker stack
 
+### NOTE: using the mysql as backend for teamcity
+
 #### step 1: create the network
 ```sh
 docker network create --driver overlay appnet
@@ -9,10 +11,11 @@ docker network create --driver overlay appnet
 echo "password123" | docker secret create db_root_password -
 echo "password456" | docker secret create db_dba_password -
 ```
-#### step 3: create the below volume fodler in 
+#### step 3: create the below volume folder in the host (if you are replicating in other workers, make sure this structure is in workers as well) 
 ```sh
 ./data/server/datadir
 ./data/server/logs
+./data/agent/
 ```
 #### step 4: deploy the docker stack
 ```sh 
@@ -23,7 +26,7 @@ docker stack deploy -c ci-stack.yml ci
 docker stack ps ci
 ```
 ```sh
-ID                  NAME                  IMAGE                              NODE                DESIRED STATE       CURRENT STATE               ERROR               PORTS
+ID                  NAME                  IMAGE                              NODE                DESIRED STATE       CURRENT STATE               
 tiqs09jezgbv        ci_teamcity.1         jetbrains/teamcity-server:latest   manager             Running             Running about an hour ago
 2wodvnxzzak8        ci_viz.1              dockersamples/visualizer:latest    manager             Running             Running about an hour ago
 8sqiq8zl4lp4        ci_db.1               mysql:latest                       manager             Running             Running about an hour ago
